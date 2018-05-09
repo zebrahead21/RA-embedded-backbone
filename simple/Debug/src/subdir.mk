@@ -30,9 +30,9 @@ C_DEPS += \
 # Each subdirectory must supply rules for building sources it contributes
 src/hello.o: ../src/hello.c
 	@echo 'Building file: $<'
-	@echo 'Executing target #4 $<'
+	@echo 'Executing target #1 $<'
 	@echo 'Invoking: Standard S32DS C Compiler'
-	arm-none-eabi-gcc "@src/hello.args" -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@)" -c -o "src/hello.o" "$<"
+	arm-none-eabi-gcc "@src/hello.args" -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@)" -o "src/hello.o" "$<"
 	@echo 'Finished building: $<'
 	@echo ' '
 

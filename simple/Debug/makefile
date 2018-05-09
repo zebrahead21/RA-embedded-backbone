@@ -2,7 +2,7 @@
 # Automatically-generated file. Do not edit!
 ################################################################################
 
-#Progress monitor hint: 4
+#Progress monitor hint: 2
 first : all
 -include ../makefile.init
 
@@ -14,9 +14,9 @@ RM := rm -rf
 # All of the sources participating in the build are defined here
 -include sources.mk
 -include subdir.mk
--include Project_Settings/Linker_Files/subdir.mk
--include Project_Settings/Startup_Code/subdir.mk
+-include linker_scripts/subdir.mk
 -include src/subdir.mk
+-include src/startup_code/subdir.mk
 -include objects.mk
 
 ifneq ($(MAKECMDGOALS),clean)
@@ -29,38 +29,53 @@ endif
 
 # Add inputs and outputs from these tool invocations to the build variables 
 EXECUTABLES += \
-hello.elf \
+hello_s32k144.elf \
 
 EXECUTABLES_QUOTED += \
-"hello.elf" \
+"hello_s32k144.elf" \
 
 EXECUTABLES_OS_FORMAT += \
-hello.elf \
+hello_s32k144.elf \
 
 SECONDARY_SIZE += \
-hello.siz \
+hello_s32k144.siz \
+hello_s32k144.siz \
 
 SECONDARY_SIZE_QUOTED += \
-"hello.siz" \
+"hello_s32k144.siz" \
+"hello_s32k144.siz" \
 
 SECONDARY_SIZE_OS_FORMAT += \
-hello.siz \
+hello_s32k144.siz \
+hello_s32k144.siz \
+
+SECONDARY_SIZE += \
+hello_s32k144.siz \
+hello_s32k144.siz \
+
+SECONDARY_SIZE_QUOTED += \
+"hello_s32k144.siz" \
+"hello_s32k144.siz" \
+
+SECONDARY_SIZE_OS_FORMAT += \
+hello_s32k144.siz \
+hello_s32k144.siz \
 
 
 # All Target
-all: warning-messages explicit-dependencies hello.elf secondary-outputs
+all: warning-messages explicit-dependencies hello_s32k144.elf secondary-outputs
 
 # Tool invocations
-hello.elf: $(OBJS) C:/SW/S32K14x/S32DSv2.0/hello/Project_Settings/Linker_Files/S32K1xx_flash.ld $(USER_OBJS)
+hello_s32k144.elf: $(OBJS) C:/Users/Andrei/Desktop/prj/rinfacad/s32k144/simple_s32k144/linker_scripts/S32K1xx_flash.ld $(USER_OBJS)
 	@echo 'Building target: $@'
-	@echo 'Executing target #5 $@'
+	@echo 'Executing target #3 $@'
 	@echo 'Invoking: Standard S32DS C Linker'
-	arm-none-eabi-gcc -o "hello.elf" "@hello.args"  $(USER_OBJS_QUOTED) $(LIBS_QUOTED)
+	arm-none-eabi-gcc -o "hello_s32k144.elf" "@hello_s32k144.args"  $(USER_OBJS_QUOTED) $(LIBS_QUOTED)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
-hello.siz: $(EXECUTABLES)
-	@echo 'Executing target #6 $@'
+hello_s32k144.siz: $(EXECUTABLES)
+	@echo 'Executing target #4 $@'
 	@echo 'Invoking: Standard S32DS Print Size'
 	arm-none-eabi-size --format=berkeley $(EXECUTABLES)
 	@echo 'Finished building: $@'
@@ -68,10 +83,10 @@ hello.siz: $(EXECUTABLES)
 
 # Other Targets
 clean:
-	-$(RM) ./*/*.d ./*/*/*.d  ./*/*.o ./*/*/*.o  $(SECONDARY_SIZE_QUOTED) $(EXECUTABLES_QUOTED)
+	-$(RM) ./*/*.d  ./*/*/*.o ./*/*.o  $(SECONDARY_SIZE_QUOTED) $(EXECUTABLES_QUOTED)
 	-@echo ' '
 
-secondary-outputs: $(SECONDARY_SIZE)
+secondary-outputs: $(SECONDARY_SIZE) $(SECONDARY_SIZE)
 
 .PHONY: all clean dependents explicit-dependencies warning-messages
 .SECONDARY:

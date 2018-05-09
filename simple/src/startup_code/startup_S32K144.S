@@ -32,6 +32,7 @@
     .align 2
     .globl __isr_vector
 __isr_vector:
+															/*Top of stack and internal interrupts (ARM Cortex M4f)*/
     .long   __StackTop                                      /* Top of Stack */
     .long   Reset_Handler                                   /* Reset Handler */
     .long   NMI_Handler                                     /* NMI Handler*/
@@ -49,7 +50,7 @@ __isr_vector:
     .long   PendSV_Handler                                  /* PendSV Handler*/
     .long   SysTick_Handler                                 /* SysTick Handler*/
 
-                                                            /* External Interrupts*/
+                                                            /* External Interrupts specific to current microcontroller S32K144*/
     .long   DMA0_IRQHandler                                 /* DMA channel 0 transfer complete*/
     .long   DMA1_IRQHandler                                 /* DMA channel 1 transfer complete*/
     .long   DMA2_IRQHandler                                 /* DMA channel 2 transfer complete*/
@@ -310,8 +311,9 @@ __isr_vector:
     .globl   Reset_Handler
     .weak    Reset_Handler
     .type    Reset_Handler, %function
-Reset_Handler:
-    cpsid   i               /* Mask interrupts */
+Reset_Handler: /*entry point for reset handler, (this is also a label, since it is
+				.global you can use it in C code to do goto ResetHandler)*/
+    cpsid   i               /* Mask(disable) interrupts */
 
     /* Init the rest of the registers */
     ldr     r1,=0
@@ -331,23 +333,18 @@ Reset_Handler:
     ldr     r0,=__StackTop
     mov     r13,r0
 
-#ifndef __NO_SYSTEM_INIT
-    /* Call the system init routine */
-    ldr     r0,=SystemInit
-    blx     r0
-#endif
-
-    /* Init .data and .bss sections */
-    ldr     r0,=init_data_bss
-    blx     r0
-    cpsie   i               /* Unmask interrupts */
+    /* Enable interrupts and branch long (jump) to main */
+    cpsie   i    /* Unmask interrupts */
     bl      main
+
+    /*infinite loop*/
 JumpToSelf:
     b       JumpToSelf
 
     .pool
     .size Reset_Handler, . - Reset_Handler
 
+/*Default interrupt source routine is defined, it is a infinite loop branches to itself*/
     .align  1
     .thumb_func
     .weak DefaultISR
@@ -355,6 +352,13 @@ JumpToSelf:
 DefaultISR:
     b       DefaultISR
     .size DefaultISR, . - DefaultISR
+
+
+/*all other ISRs are defined as WEAK symbols to defaultISR.
+If there is a function in our program called like these bellow our function
+will be a stronger definition and will take precedence over the following definition
+
+ex if I define a function void NMI_Handler(){} this will be executed and not defautlISR */
 
 /*    Macro to define default handlers. Default handler
  *    will be weak symbol and just dead loops. They can be

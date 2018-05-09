@@ -50,7 +50,7 @@ C_DEPS :=
 
 # Every subdirectory with source files must be described here
 SUBDIRS := \
-Project_Settings/Linker_Files \
-Project_Settings/Startup_Code \
+linker_scripts \
 src \
+src/startup_code \
 
