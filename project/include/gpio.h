@@ -202,6 +202,6 @@ void setPinPasiveFilter(PORT_Type* whichGPIO, uint8_t pinNumber, ePinPasFilter f
 
 void setPinValue(GPIO_Type* whichGPIO, uint8_t pinNumber, uint8_t value);
 
-uint8_t getPinValue(GPIO_Type* whichGPIO, uint8_t pinNumber);
+uint32_t getPinValue(GPIO_Type* whichGPIO, uint8_t pinNumber);
 
 #endif /* GPIO_H_ */

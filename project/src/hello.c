@@ -10,50 +10,86 @@
 #include "S32K144_small.h"    /* include peripheral declarations S32K144 */
 #include "gpio.h"
 
-#define LED_BLUE	GPIO_Pin_0         /* Port PTD0, bit 0: FRDM EVB output to blue LED */
-#define LED_RED		GPIO_Pin_15
-#define LED_GREEN	GPIO_Pin_16
-
 #define BTN_0		GPIO_Pin_12        /* Port PTC12, bit 12: FRDM EVB input from BTN0 [SW2] */
 #define BTN_1		GPIO_Pin_13
 #define NUMBER_BUTTONS 2
 
-#define LED_ON 0
+typedef enum{
+	LED_ON,
+	LED_OFF
+}eLedState;
+
 #define LED_OFF 1
 
 #define CPU_FREQ 48000000
-#define WHILE_INSTRUCTIONS 4
+#define WHILE_INSTRUCTIONS (4*90)
 #define BUTTON_TEST_DELAY (CPU_FREQ / WHILE_INSTRUCTIONS)
 
 typedef enum {
 	eBtn_NotPressed,
 	eBtn_Pressed,
+	eBtn_Released,
 	eBtn_LongPress,
 }eButtonPress;
+
+typedef enum{
+	LED_BLUE = GPIO_Pin_0,
+	LED_RED = GPIO_Pin_15,
+	LED_GREEN = GPIO_Pin_16,
+}eLED;
 
 typedef enum{
 	eButtonLeft = BTN_1,
 	eButtonRight = BTN_0,
 }eButton;
 
-//eButtonPress gButtonState[NUMBER_BUTTONS];
+uint32_t buttonDelay[NUMBER_BUTTONS];
+
+//experimentally determined a calibration factor, it is not accurate
+#define EXPERIMENTAL_CALIB 8
+void cpuDelayMs(uint32_t ms)
+{
+	uint32_t counter;
+	while(ms--)
+	{
+		//delay 1ms
+		counter = CPU_FREQ / EXPERIMENTAL_CALIB / 1000;
+		while(counter--);
+	}
+}
+
+void turnLEDOn(eLED led)
+{
+	setPinValue(GPIOD, LED_BLUE, LED_OFF);
+	setPinValue(GPIOD, LED_RED, LED_OFF);
+	setPinValue(GPIOD, LED_GREEN, LED_OFF);
+
+	setPinValue(GPIOD, led, LED_ON);
+}
+
+void turnLEDOff(eLED led)
+{
+	setPinValue(GPIOD, led, LED_OFF);
+}
 
 eButtonPress isPressed(eButton btn)
 {
-	uint32_t delay=0;
-	uint8_t value = getPinValue(GPIOC, btn);
-
-	if(value)
+	if(getPinValue(GPIOC, btn)) //button is pressed
 	{
-		while(delay < BUTTON_TEST_DELAY)
+		if(buttonDelay[btn] < BUTTON_TEST_DELAY)
 		{
-			if(!getPinValue(GPIOC, btn))
-			{
-				return eBtn_Pressed;
-			}
-			delay++;
+			buttonDelay[btn]++;
+			return eBtn_Pressed;
 		}
-		return eBtn_LongPress;
+		else
+		{
+			return eBtn_LongPress;
+		}
+	}
+	else if(buttonDelay[btn] > 0) //button is not pressed check if it was pressed last time
+	{
+		buttonDelay[btn] = 0;
+		return eBtn_Released;
 	}
 
 	return eBtn_NotPressed;
@@ -93,8 +129,10 @@ void WDOG_disable (void)
 int main(void)
 {
   //int counter = 0;
-  uint8_t whichLED = 0;
-  uint8_t LEDState[] = {0, 0, 0};
+  eLED whichLED = 0;
+  uint8_t currentLEDState = 0;
+  eButtonPress leftButPressState;
+  eButtonPress rightButPressState;
 
   WDOG_disable();             /* Disable Watchdog in case it is not done in startup code */
                               /* Enable clocks to peripherals (PORT modules) */
@@ -114,6 +152,7 @@ int main(void)
 
   setPinDirection(GPIOD, LED_BLUE, ePinDir_Output);
   setPinFunction(PORTD, LED_BLUE, eAF_pinGPIO);
+  //todo set led off
 
   setPinDirection(GPIOD, LED_RED, ePinDir_Output);
   setPinFunction(PORTD, LED_RED, eAF_pinGPIO);
@@ -123,57 +162,58 @@ int main(void)
 
   for(;;)
   {
-	if( eBtn_NotPressed != isPressed(eButtonLeft) )
-	{
-		waitButtonRelease(eButtonLeft);
+	leftButPressState = isPressed(eButtonLeft);
+	rightButPressState = isPressed(eButtonRight);
 
-		whichLED = (whichLED + 1) % 3;
+	if( eBtn_Pressed == leftButPressState)
+	{
+		//change the led color to the next color
+		switch(whichLED)
+		{
+		case LED_BLUE:
+			whichLED = LED_RED;
+			break;
+		case LED_RED:
+			whichLED = LED_GREEN;
+			break;
+		default:
+			whichLED = LED_BLUE;
+		}
+
+		//blink the led once to signal color change
+		turnLEDOn(whichLED);
+		cpuDelayMs(100);
+		//led will be turned off if the other button is not pressed,
+		//no need to turn it off here
+
+		waitButtonRelease(eButtonLeft);
 	}
 
-	if( eBtn_LongPress == isPressed(eButtonRight) )
+	if( eBtn_LongPress == rightButPressState )
 	{
-		LEDState[whichLED] = 1;
+		currentLEDState = 1;
+
+		//blink the led continuously to signal that the button has been long pressed
+		//and can be released (visual feedback for user)
+		turnLEDOff(whichLED);
+		cpuDelayMs(200); //keep it off for 0.2s
+
+		turnLEDOn(whichLED);
+		cpuDelayMs(300); //keep it on for 0.3s
+	}
+	else if( eBtn_Pressed == rightButPressState )
+	{
+		currentLEDState = 0;
+		turnLEDOn(whichLED);
 	}
 	else
 	{
-		LEDState[whichLED] = 0;
-	}
-
-	switch(whichLED)
-	{
-	case 0:
-		if(getPinValue(GPIOC, eButtonRight) || LEDState[whichLED])
-		{
-			setPinValue(GPIOD, LED_RED, LED_ON);
-		}
-		else
-		{
-			setPinValue(GPIOD, LED_RED, LED_OFF);
-		}
-	break;
-
-	case 1:
-		if(getPinValue(GPIOC, eButtonRight) || LEDState[whichLED])
-		{
-			setPinValue(GPIOD, LED_GREEN, LED_ON);
-		}
-		else
-		{
-			setPinValue(GPIOD, LED_GREEN, LED_OFF);
-		}
-	break;
-
-	case 2:
-		if(getPinValue(GPIOC, eButtonRight) || LEDState[whichLED])
-		{
-			setPinValue(GPIOD, LED_BLUE, LED_ON);
-		}
-		else
+		if(!currentLEDState)
 		{
 			setPinValue(GPIOD, LED_BLUE, LED_OFF);
+			setPinValue(GPIOD, LED_RED, LED_OFF);
+			setPinValue(GPIOD, LED_GREEN, LED_OFF);
 		}
-	break;
 	}
-
   }
 }
