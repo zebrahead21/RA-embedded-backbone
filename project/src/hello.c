@@ -193,11 +193,10 @@ int main(void)
   int factorR = 0;
   int factorG = 0;
   int factorB = 0;
+  int count = 0;
 
   WDOG_disable();             /* Disable Watchdog in case it is not done in startup code */
                               /* Enable clocks to peripherals (PORT modules) */
-
-
 
   //Clock Configuration
   PCC->PORTC_CLK = PCC_PCCn_CGC_MASK;
@@ -210,13 +209,11 @@ int main(void)
   setPinFunction(PORTC, BTN_0, eAF_pinGPIO);
   setPinPasiveFilter(PORTC, BTN_0, ePasFilter_On);
 
-  setPinIntrerrupt(GPIOC, BTN_0, IRQC_RE);
 
   setPinDirection(GPIOC, BTN_1, ePinDir_Input);
   setPinFunction(PORTC, BTN_1, eAF_pinGPIO);
   setPinPasiveFilter(PORTC, BTN_1, ePasFilter_On);
 
-  setPinIntrerrupt(GPIOC, BTN_1, IRQC_RE);
 
   whichLED = LED_RED;
 
@@ -244,27 +241,32 @@ int main(void)
 
 	if( eBtn_LongPress == rightButPressState )
 	{
-		switch(whichLED)
-		{
-		case LED_BLUE:
-			factorB += 5;
-			cpuDelayMs(100);
-			if (factorB > 255)
-				factorB = 0;
-			break;
-		case LED_RED:
-			factorR += 5;
-			cpuDelayMs(100);
-			if (factorR > 255)
-				factorR = 0;
-			break;
-		default:
-			factorG += 5;
-			cpuDelayMs(100);
-			if (factorG > 255)
-				factorG = 0;
-			cpuDelayMs(100);
+		while (count < 5) {
+			switch(whichLED)
+			{
+			case LED_BLUE:
+				factorB += 5;
+				cpuDelayMs(100);
+				if (factorB > 255)
+					factorB = 0;
+				break;
+			case LED_RED:
+				factorR += 5;
+				cpuDelayMs(100);
+				if (factorR > 255)
+					factorR = 0;
+				break;
+			default:
+				factorG += 5;
+				cpuDelayMs(100);
+				if (factorG > 255)
+					factorG = 0;
+				cpuDelayMs(100);
+			}
+			count++;
 		}
+		count = 0;
+
 	}
 	else if( eBtn_Pressed == rightButPressState )
 	{
@@ -285,24 +287,23 @@ int main(void)
 			if (factorG > 255)
 				factorG = 0;
 		}
-	}
+		cpuDelayMs(100);
 
+	}
 	switch(whichLED)
 	{
 	case LED_BLUE:
 		setPWMDUty(FTM0, ePWMLED_GREEN, 0);
 		setPWMDUty(FTM0, ePWMLED_BLUE, factorB);
-		cpuDelayMs(100);
 		break;
 	case LED_RED:
 		setPWMDUty(FTM0, ePWMLED_BLUE, 0);
 		setPWMDUty(FTM0, ePWMLED_RED, factorR);
-		cpuDelayMs(100);
 		break;
 	default:
 		setPWMDUty(FTM0, ePWMLED_RED, 0);
 		setPWMDUty(FTM0, ePWMLED_GREEN, factorG);
-		cpuDelayMs(100);
 	}
+
   }
 }
