@@ -186,6 +186,9 @@ typedef enum
 /*Pull Select */
 #define PCR_PS			 0
 
+/*IRQS */
+#define PCR_IRQS		16
+
 typedef enum
 {
 	ePasFilter_Off,
@@ -201,6 +204,8 @@ void setPinFunction(PORT_Type* whichGPIO, uint8_t pinNumber, eAlternateFunc func
 void setPinPasiveFilter(PORT_Type* whichGPIO, uint8_t pinNumber, ePinPasFilter filter);
 
 void setPinValue(GPIO_Type* whichGPIO, uint8_t pinNumber, uint8_t value);
+
+void setPinIntrerrupt(PORT_Type* whichGPIO, uint8_t pinNumber, IRQ_Config intrerrupt);
 
 uint32_t getPinValue(GPIO_Type* whichGPIO, uint8_t pinNumber);
 

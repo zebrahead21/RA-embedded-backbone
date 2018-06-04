@@ -6,10 +6,10 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 LD_SRCS += \
-../linker_scripts/S32K1xx_flash.ld \
+../linker_scripts/S32K1xx_flash.ld 
 
 LD_SRCS_QUOTED += \
-"../linker_scripts/S32K1xx_flash.ld" \
+"../linker_scripts/S32K1xx_flash.ld" 
 
 
 # Each subdirectory must supply rules for building sources it contributes

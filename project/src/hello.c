@@ -153,17 +153,17 @@ void timer0Init()
 	//RCC enable timer0
 	PCC->PCC_FTM0 = PCC_PCCn_CGC_MASK;
 
-	 setPinFunction(PORTD, LED_BLUE, eAF_pinAF2);
-     setPinFunction(PORTD, LED_RED, eAF_pinAF2);
-	 setPinFunction(PORTD, LED_GREEN, eAF_pinAF2);
+	setPinFunction(PORTD, LED_BLUE, eAF_pinAF2);
+	setPinFunction(PORTD, LED_RED, eAF_pinAF2);
+	setPinFunction(PORTD, LED_GREEN, eAF_pinAF2);
 
 	enablePWMOutput(FTM0, ePWMLED_BLUE, ePWM_enabled, LEDPWN_CNTIN_VAL, LEDPWN_MOD_VAL);
 	enablePWMOutput(FTM0, ePWMLED_RED, ePWM_enabled, LEDPWN_CNTIN_VAL, LEDPWN_MOD_VAL);
 	enablePWMOutput(FTM0, ePWMLED_GREEN, ePWM_enabled, LEDPWN_CNTIN_VAL, LEDPWN_MOD_VAL);
 
 	setPWMDUty(FTM0, ePWMLED_BLUE, 0);
-	setPWMDUty(FTM0, ePWMLED_RED, 10);
-	setPWMDUty(FTM0, ePWMLED_GREEN, 127);
+	setPWMDUty(FTM0, ePWMLED_RED, 0);
+	setPWMDUty(FTM0, ePWMLED_GREEN, 0);
 
 	//configure timer 0
 	selectClockSource(FTM0, eCS_FTM_InClk);
@@ -187,11 +187,12 @@ void init_RGB_GPIO(void)
 
 int main(void)
 {
-  //int counter = 0;
   eLED whichLED = 0;
-  uint8_t currentLEDState = 0;
   eButtonPress leftButPressState;
   eButtonPress rightButPressState;
+  int factorR = 0;
+  int factorG = 0;
+  int factorB = 0;
 
   WDOG_disable();             /* Disable Watchdog in case it is not done in startup code */
                               /* Enable clocks to peripherals (PORT modules) */
@@ -203,27 +204,21 @@ int main(void)
   PCC->PORTD_CLK = PCC_PCCn_CGC_MASK;
 
   timer0Init();
-  //init_RGB_GPIO();
-
-  uint32_t cnt;
-  uint32_t addr;
-  for(;;)
-  {
-	  cnt = FTM0->CNT;
-	  addr = &(FTM0->CNT);
-  }
-
 
   //GPIO Configuration
   setPinDirection(GPIOC, BTN_0, ePinDir_Input);
   setPinFunction(PORTC, BTN_0, eAF_pinGPIO);
   setPinPasiveFilter(PORTC, BTN_0, ePasFilter_On);
 
+  setPinIntrerrupt(GPIOC, BTN_0, IRQC_RE);
+
   setPinDirection(GPIOC, BTN_1, ePinDir_Input);
   setPinFunction(PORTC, BTN_1, eAF_pinGPIO);
   setPinPasiveFilter(PORTC, BTN_1, ePasFilter_On);
 
+  setPinIntrerrupt(GPIOC, BTN_1, IRQC_RE);
 
+  whichLED = LED_RED;
 
   for(;;)
   {
@@ -232,7 +227,6 @@ int main(void)
 
 	if( eBtn_Pressed == leftButPressState)
 	{
-		//change the led color to the next color
 		switch(whichLED)
 		{
 		case LED_BLUE:
@@ -245,40 +239,70 @@ int main(void)
 			whichLED = LED_BLUE;
 		}
 
-		//blink the led once to signal color change
-		turnLEDOn(whichLED);
-		cpuDelayMs(100);
-		//led will be turned off if the other button is not pressed,
-		//no need to turn it off here
-
 		waitButtonRelease(eButtonLeft);
 	}
 
 	if( eBtn_LongPress == rightButPressState )
 	{
-		currentLEDState = 1;
-
-		//blink the led continuously to signal that the button has been long pressed
-		//and can be released (visual feedback for user)
-		turnLEDOff(whichLED);
-		cpuDelayMs(200); //keep it off for 0.2s
-
-		turnLEDOn(whichLED);
-		cpuDelayMs(300); //keep it on for 0.3s
+		switch(whichLED)
+		{
+		case LED_BLUE:
+			factorB += 5;
+			cpuDelayMs(100);
+			if (factorB > 255)
+				factorB = 0;
+			break;
+		case LED_RED:
+			factorR += 5;
+			cpuDelayMs(100);
+			if (factorR > 255)
+				factorR = 0;
+			break;
+		default:
+			factorG += 5;
+			cpuDelayMs(100);
+			if (factorG > 255)
+				factorG = 0;
+			cpuDelayMs(100);
+		}
 	}
 	else if( eBtn_Pressed == rightButPressState )
 	{
-		currentLEDState = 0;
-		turnLEDOn(whichLED);
-	}
-	else
-	{
-		if(!currentLEDState)
+		switch(whichLED)
 		{
-			setPinValue(GPIOD, LED_BLUE, LED_OFF);
-			setPinValue(GPIOD, LED_RED, LED_OFF);
-			setPinValue(GPIOD, LED_GREEN, LED_OFF);
+		case LED_BLUE:
+			factorB += 30;
+			if (factorB > 255)
+				factorB = 0;
+			break;
+		case LED_RED:
+			factorR += 30;
+			if (factorR > 255)
+				factorR = 0;
+			break;
+		default:
+			factorG += 30;
+			if (factorG > 255)
+				factorG = 0;
 		}
+	}
+
+	switch(whichLED)
+	{
+	case LED_BLUE:
+		setPWMDUty(FTM0, ePWMLED_GREEN, 0);
+		setPWMDUty(FTM0, ePWMLED_BLUE, factorB);
+		cpuDelayMs(100);
+		break;
+	case LED_RED:
+		setPWMDUty(FTM0, ePWMLED_BLUE, 0);
+		setPWMDUty(FTM0, ePWMLED_RED, factorR);
+		cpuDelayMs(100);
+		break;
+	default:
+		setPWMDUty(FTM0, ePWMLED_RED, 0);
+		setPWMDUty(FTM0, ePWMLED_GREEN, factorG);
+		cpuDelayMs(100);
 	}
   }
 }

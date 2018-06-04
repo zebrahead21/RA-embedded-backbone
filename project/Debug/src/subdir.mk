@@ -6,25 +6,25 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS_QUOTED += \
-"../src/hello.c" \
+"../src/hello.c" 
 
 C_SRCS += \
-../src/hello.c \
+../src/hello.c 
 
 OBJS_OS_FORMAT += \
-./src/hello.o \
+./src/hello.o 
 
 C_DEPS_QUOTED += \
-"./src/hello.d" \
+"./src/hello.d" 
 
 OBJS += \
-./src/hello.o \
+./src/hello.o 
 
 OBJS_QUOTED += \
-"./src/hello.o" \
+"./src/hello.o" 
 
 C_DEPS += \
-./src/hello.d \
+./src/hello.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes

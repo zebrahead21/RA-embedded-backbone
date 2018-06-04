@@ -26,6 +26,11 @@ void setPinFunction(PORT_Type* whichGPIO, uint8_t pinNumber, eAlternateFunc func
 	whichGPIO->PCR[pinNumber] |= (func << PCR_MUX);
 }
 
+void setPinIntrerrupt(PORT_Type* whichGPIO, uint8_t pinNumber, IRQ_Config intrerrupt)
+{
+	whichGPIO->PCR[pinNumber] |= (intrerrupt << PCR_IRQS);
+}
+
 void setPinPasiveFilter(PORT_Type* whichGPIO, uint8_t pinNumber, ePinPasFilter filter)
 {
 	if(ePasFilter_Off == filter)
